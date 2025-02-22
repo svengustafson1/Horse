@@ -12,30 +12,46 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Database setup
-const dbPath = path.join(process.cwd(), 'server', 'db', 'database.sqlite');
-const db = new sqlite3.Database(dbPath);
-
-// Initialize database with schema and data
-const schemaSQL = fs.readFileSync(path.join(process.cwd(), 'server', 'db', 'schema.sql'), 'utf8');
-const initSQL = fs.readFileSync(path.join(process.cwd(), 'server', 'db', 'init.sql'), 'utf8');
-
-db.serialize(() => {
-    db.exec(schemaSQL, (err) => {
-        if (err) {
-            console.error('Error creating schema:', err);
-        } else {
-            console.log('Schema created successfully');
-            db.exec(initSQL, (err) => {
-                if (err) {
-                    console.error('Error initializing data:', err);
-                } else {
-                    console.log('Data initialized successfully');
-                }
-            });
-        }
-    });
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something broke!' });
 });
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+// Database setup
+let db;
+try {
+  const dbPath = path.join(process.cwd(), 'server', 'db', 'database.sqlite');
+  db = new sqlite3.Database(dbPath);
+  
+  // Initialize database with schema and data
+  const schemaSQL = fs.readFileSync(path.join(process.cwd(), 'server', 'db', 'schema.sql'), 'utf8');
+  const initSQL = fs.readFileSync(path.join(process.cwd(), 'server', 'db', 'init.sql'), 'utf8');
+
+  db.serialize(() => {
+    db.exec(schemaSQL, (err) => {
+      if (err) {
+        console.error('Error creating schema:', err);
+      } else {
+        console.log('Schema created successfully');
+        db.exec(initSQL, (err) => {
+          if (err) {
+            console.error('Error initializing data:', err);
+          } else {
+            console.log('Data initialized successfully');
+          }
+        });
+      }
+    });
+  });
+} catch (error) {
+  console.error('Database initialization error:', error);
+}
 
 // API Routes
 // Get all users
@@ -115,7 +131,10 @@ app.post('/api/events', (req, res) => {
     );
 });
 
-// Other routes remain the same...
+// Catch-all route for undefined API endpoints
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API endpoint not found' });
+});
 
 // Export the Express API
 module.exports = app; 
