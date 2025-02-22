@@ -11,17 +11,21 @@
     "install-client": "cd client && npm install",
     "install-server": "npm install",
     "install-all": "npm run install-server && npm run install-client",
-    "build": "npm run install-client && cd client && npm run build"
+    "build": "npm run install-client && cd client && npm run build",
+    "vercel-build": "npm run build"
   },
   "dependencies": {
+    "@vercel/postgres": "^0.7.2",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "sqlite3": "^5.1.6"
+    "express": "^4.18.2"
   },
   "devDependencies": {
     "concurrently": "^8.2.1",
     "nodemon": "^3.1.9"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
